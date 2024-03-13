@@ -1,0 +1,29 @@
+Meeting Summary 1:
+* We went through the distance oracle article.
+* We suggested different directions for progress (finding "bad" graphs and edge cases for the algorithm, thinking of ways to break the structures of the algorithm).
+* We talked about other algorithms that can be worked on instead.
+
+Goals for the next meeting:
+* Go through the articles and decide which direction interests us.
+* Determine a work environment (programming language, reference libraries...)
+* Go through the milestones needed for the project (the submissions to Ariel Roth and check what is relevant)
+
+
+Meeting Summary 2:
+* We decided that we will start implementing basic tools that emerge from the articles (ball, cluster, distance oracle, etc.) at the same time as reading more deeply in the article "A Compact Routing Scheme and Approximate Distance Oracle for Power-Law Graphs" (from now on, will be referred to as "oracle-exp").
+* The idea was raised that a possible goal of the project would be to recreate the environment of the experiment conducted in the article and compare our results with theirs to examine the impact of the changes that have occurred since then.
+
+Goals for the next meeting:
+* To deepen the understanding of the article.
+* Find a possible time window for a weekly meeting.
+* Talk to Ariel Roth about approving the project.
+* Organize an orderly programming work environment and plan the smart implementation of the tools.
+
+
+Meeting Summary 3: (without Liam)
+* We opened a github and jira page for the project.
+* We went in depth on chapters 1 and 2 in the oracle-exp article.
+
+Goals for the next meeting:
+* Go through the tasks in Jira.
+* Go through chapters 3 and 4 (as much as possible).
