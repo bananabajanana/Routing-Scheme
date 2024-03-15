@@ -27,3 +27,12 @@ Meeting Summary 3: (without Liam)
 Goals for the next meeting:
 * Go through the tasks in Jira.
 * Go through chapters 3 and 4 (as much as possible).
+
+Meeting Summary 4: (with Liam and Ariel)
+* We informed Liam about the project requirements Areiel Rot dissmissed us from and that Liam is incharge with grwading our project.
+* We talked briefly about section 3 in the oracle-exp article and decided to continue reading up to section 4 and then discuss the formal proofs in the article.
+
+Goals for the next meeting:
+* Go through the tasks in Jira.
+* Go through chapter 4 in depth and read chapter 5 as much as possible.
+
