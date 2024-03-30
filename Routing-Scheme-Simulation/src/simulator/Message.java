@@ -7,4 +7,19 @@ package simulator;
  */
 public class Message {
   private MessageHeader header;
+
+  public Message(MessageHeader header) {
+    this.header = header;
+  }
+
+  public Message() {
+  }
+
+  public MessageHeader getHeader() {
+    return header;
+  }
+
+  public void setHeader(MessageHeader header) {
+    this.header = header;
+  }
 }
