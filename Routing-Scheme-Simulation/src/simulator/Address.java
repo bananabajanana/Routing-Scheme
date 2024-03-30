@@ -12,7 +12,7 @@ package simulator;
 public class Address {
   private String nodeSerialization;
   private String closestLandmarkSerialization;
-  int[] fromLandmarkPath;
-  double fullAddressRepresentation;
-  double addressMask;
+  private int[] fromLandmarkPath;
+  private double fullAddressRepresentation;
+  private double addressMask;
 }
