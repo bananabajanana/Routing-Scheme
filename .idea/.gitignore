@@ -1,0 +1,66 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# IntelliJ IDEA files
+.idea/                  # IntelliJ project settings, cache, and local configuration files
+*.iml                   # IntelliJ Module file
+*.iws                   # IntelliJ WebStorm project file (obsolete)
+*.ipr                   # IntelliJ Project file (obsolete)
+out/                    # Default build directory for IntelliJ
+
+# Build files
+/target/                # Directory for compiled bytecode files in Maven projects
+/build/                 # Build directory for Gradle and other build systems
+/bin/                   # Binaries folder, commonly used in Java and other compiled languages
+
+# Virtual Machine crash logs, generic for all Java applications
+hs_err_pid*             # Java VM crash logs
+
+# Dependency directories (e.g., for Maven, Gradle)
+/.pom/                  # Temporary POM files folder (uncommon)
+/.gradle/               # Gradle local configuration and cache
+/.m2/                   # Maven local repository cache
+/.mvn/                  # Maven wrapper files for the project
+/project/.mvn/          # Maven wrapper files for the project (specific location)
+
+# Operating system files
+.DS_Store               # macOS desktop services store file
+Thumbs.db               # Windows thumbnail cache
+desktop.ini             # Windows folder settings
+
+# Application-specific files
+# (These examples are for a Java project; adjust based on your project's language and framework)
+*.class                 # Compiled Java class files
+
+# Log files
+*.log                   # Log files can contain sensitive or irrelevant information
+
+# Package Files #
+*.jar                   # Java Archive files - can contain compiled classes and libraries
+*.war                   # Web Application Archive - deployable web application packages
+*.nar                   # NiFi Archive - used with Apache NiFi
+*.ear                   # Enterprise Archive - used in Java EE for enterprise applications
+*.zip                   # ZIP compressed files
+*.tar.gz                # GZipped TAR files
+*.rar                   # RAR compressed files
+
+# Environment files or secret files
+.env                    # Environment variable files can contain sensitive information
+.secret                 # Generic secret files (rarely used but can be for private keys or config)
+
+# Node.js dependencies for projects that also use Node.js
+/node_modules/          # Folder for Node.js project dependencies
+/npm-debug.log          # Log file for npm errors
+/yarn-error.log         # Log file for Yarn errors
+
+# Python bytecode
+__pycache__/            # Python 3 bytecode cache
+*.py[cod]               # Python bytecode files for Python 2
+*.pyc                   # Compiled Python files
+
