@@ -3,15 +3,15 @@ package simulator;
 /**
  * The full address of a node, which contains meta-data about the graph post instantiation phase.
  * The address contains:
- * - The original node identifier.
- * - The identifier of the closest landmark to the node
- * - the routes taken along the path from said landmark to the node
+ * - nodeID: The original node identifier.
+ * - closestLandmarkID: The identifier of the closest landmark to the node
+ * - fromLandmarkPath: the routes taken along the path from said landmark to the node
  * - a bit representation of the above (might be replaced eventually with serialization function)
  * - a mask for the bit representation
  */
 public class Address {
-  private String nodeSerialization;
-  private String closestLandmarkSerialization;
+  private int nodeID;
+  private int closestLandmarkID;
   private int[] fromLandmarkPath;
   private double fullAddressRepresentation;
   private double addressMask;
@@ -19,37 +19,37 @@ public class Address {
   /**
    * Constructor for Address class.
 
-   * @param nodeSerialization The serialized node this is the address of
-   * @param closestLandmarkSerialization closest landmark to node
+   * @param nodeID The serialized node this is the address of
+   * @param closestLandmarkID closest landmark to node
    * @param fromLandmarkPath the path from said landmark to this node
    */
-  public Address(String nodeSerialization, String closestLandmarkSerialization,
+  public Address(int nodeID, int closestLandmarkID,
       int[] fromLandmarkPath) {
-    this.nodeSerialization = nodeSerialization;
-    this.closestLandmarkSerialization = closestLandmarkSerialization;
+    this.nodeID = nodeID;
+    this.closestLandmarkID = closestLandmarkID;
     this.fromLandmarkPath = fromLandmarkPath;
   }
 
   //region <Getters and Setters>
 
-  public void setNodeSerialization(String nodeSerialization) {
-    this.nodeSerialization = nodeSerialization;
+  public void setNodeID(int nodeID) {
+    this.nodeID = nodeID;
   }
 
-  public void setClosestLandmarkSerialization(String closestLandmarkSerialization) {
-    this.closestLandmarkSerialization = closestLandmarkSerialization;
+  public void setClosestLandmarkID(int closestLandmarkID) {
+    this.closestLandmarkID = closestLandmarkID;
   }
 
   public void setFromLandmarkPath(int[] fromLandmarkPath) {
     this.fromLandmarkPath = fromLandmarkPath;
   }
 
-  public String getNodeSerialization() {
-    return nodeSerialization;
+  public int getNodeID() {
+    return nodeID;
   }
 
-  public String getClosestLandmarkSerialization() {
-    return closestLandmarkSerialization;
+  public int getClosestLandmarkID() {
+    return closestLandmarkID;
   }
 
   public int[] getFromLandmarkPath() {
