@@ -78,4 +78,70 @@ public class RoutingProcedure {
 
     return hops;
   }
+
+  private float expectedVal(float[] values) {
+    float sum = 0;
+    for (int i = 0; i < values.length; i++) {
+      sum += values[i];
+    }
+    sum /= values.length;
+    return sum;
+  }
+
+  private float varianceVal(float[] values) {
+    float sum = 0;
+    for (int i = 0; i < values.length; i++) {
+      sum += values[i];
+    }
+    sum /= values.length;
+    float output = 0;
+    for (int i = 0; i < values.length; i++) {
+      output += ((values[i] - sum) * (values[i] - sum)) / (values.length - 1);
+    }
+    return output;
+  }
+
+  /**
+   * Calculates the expected value and variance of the stretch value for a series of nodes.
+   * Does this while ignoring the handshake procedure.
+
+   * @param s An array of all the source nodes
+   * @param t An array of all the target nodes
+   * @param spLengths An array of the precalculated shortest paths between them
+   * @return An array of the format { Exp, Var }
+   */
+  public float[] expVarNoHandshakes(ComputerNode[] s, ComputerNode[] t, int[] spLengths) {
+    float[] stretches = new float[s.length];
+    for (int i = 0; i < s.length; i++) {
+      stretches[i] = ((float) sendMessageNoHandshakes(s[i], t[i])) / ((float) spLengths[i]);
+    }
+
+    float[] output = { expectedVal(stretches), varianceVal(stretches) };
+    return output;
+  }
+
+  /**
+   * Calculates the expected value and variance of the stretch value for a series of nodes.
+   * Does this while 'flattening' the handshake procedure (every two nodes that would've gone
+   * through handshake, are calculated after the process)
+
+   * @param s An array of all the source nodes
+   * @param t An array of all the target nodes
+   * @param spLengths An array of the precalculated shortest paths between them
+   * @return An array of the format { Exp, Var }
+   */
+  public float[] expVarWithHandshakes(ComputerNode[] s, ComputerNode[] t, int[] spLengths) {
+    float[] stretches = new float[s.length];
+    for (int i = 0; i < s.length; i++) {
+      boolean thirdCaseShouldSkip = false; //TODO: implement check
+      if (thirdCaseShouldSkip) {
+        stretches[i] = 1;
+      } else {
+        stretches[i] = ((float) sendMessageNoHandshakes(s[i], t[i])) / ((float) spLengths[i]);
+      }
+    }
+
+    float[] output = { expectedVal(stretches), varianceVal(stretches) };
+    return output;
+  }
 }
