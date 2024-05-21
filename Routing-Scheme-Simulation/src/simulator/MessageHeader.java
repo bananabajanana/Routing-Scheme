@@ -10,8 +10,8 @@ package simulator;
  */
 public class MessageHeader {
   private RouteType routeType;
-  private String serializedS;
-  private String serializedT;
+  private int serializedS;
+  private int serializedT;
   private Address address;
   private int position;
   private int[] path;
@@ -29,7 +29,7 @@ public class MessageHeader {
    * @param serializedT The serialization of the target node
    * @return a corresponding MessageHeader object
    */
-  public static MessageHeader newLocalHeader(String serializedS, String serializedT) {
+  public static MessageHeader newLocalHeader(int serializedS, int serializedT) {
     MessageHeader output = new MessageHeader();
     output.routeType = RouteType.local;
     output.serializedS = serializedS;
@@ -44,7 +44,7 @@ public class MessageHeader {
    * @param address The full address of the target node
    * @return a corresponding MessageHeader object
    */
-  public static MessageHeader newToLandmarkHeader(String serializedS, Address address) {
+  public static MessageHeader newToLandmarkHeader(int serializedS, Address address) {
     MessageHeader output = new MessageHeader();
     output.routeType = RouteType.toLandmark;
     output.serializedS = serializedS;
@@ -60,7 +60,7 @@ public class MessageHeader {
    * @param path The path from source to target
    * @return a corresponding MessageHeader object
    */
-  public static MessageHeader newFromLandmarkHeader(String serializedS, String serializedT,
+  public static MessageHeader newFromLandmarkHeader(int serializedS, int serializedT,
       int[] path) {
     MessageHeader output = new MessageHeader();
     output.routeType = RouteType.fromLandmark;
@@ -79,7 +79,7 @@ public class MessageHeader {
    * @param path The path from source to target
    * @return a corresponding MessageHeader object
    */
-  public static MessageHeader newDirectHeader(String serializedS, String serializedT, int[] path) {
+  public static MessageHeader newDirectHeader(int serializedS, int serializedT, int[] path) {
     MessageHeader output = new MessageHeader();
     output.routeType = RouteType.direct;
     output.serializedS = serializedS;
@@ -97,7 +97,7 @@ public class MessageHeader {
    * @param path The path from source to target
    * @return a corresponding MessageHeader object
    */
-  public static MessageHeader newHandshakeHeader(String serializedS, String serializedT,
+  public static MessageHeader newHandshakeHeader(int serializedS, int serializedT,
       int[] path) {
     MessageHeader output = new MessageHeader();
     output.routeType = RouteType.handshake;
@@ -114,7 +114,7 @@ public class MessageHeader {
     return routeType;
   }
 
-  public String getSerializedS() {
+  public int getSerializedS() {
     return serializedS;
   }
 
@@ -123,7 +123,7 @@ public class MessageHeader {
 
    * @return serializedT value
    */
-  public String getSerializedT() {
+  public int getSerializedT() {
     if (routeType == RouteType.toLandmark) {
       throw new RuntimeException("HEADER: toLandmark header tried to access T serialization");
     }
