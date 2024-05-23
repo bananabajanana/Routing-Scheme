@@ -24,4 +24,24 @@ public class ComputerNode {
     ports = new ArrayList<>();
     tbl = new HashMap<>();
   }
+
+  public int getNodeIndex() {
+    return NodeIndex;
+  }
+
+  public Address getAddress() {
+    return address;
+  }
+
+  public void setAddress(Address address) {
+    this.address = address;
+  }
+
+  public ArrayList<ComputerNode> getPorts() {
+    return ports;
+  }
+
+  public HashMap<ComputerNode, Integer> getTbl() {
+    return tbl;
+  }
 }
