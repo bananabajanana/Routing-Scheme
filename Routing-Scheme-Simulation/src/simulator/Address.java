@@ -12,7 +12,7 @@ package simulator;
 public class Address {
   private int nodeID;
   private int closestLandmarkID;
-  private int[] fromLandmarkPath;
+  private int[] fromLandmarkPath; // the port path from the closest landmark to this node to the node itself
   private double fullAddressRepresentation;
   private double addressMask;
 
