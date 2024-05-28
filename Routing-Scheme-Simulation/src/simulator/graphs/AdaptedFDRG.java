@@ -1,17 +1,20 @@
-package simulator;
+package simulator.graphs;
 
 import java.util.Random;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
+import simulator.ComputerNode;
+import simulator.RoutingGraphBuilder;
+
 import java.util.ArrayList;
 /**
- * RPLG - Random Power Log Graph.
+ * AdaptedFDRG - Random Power Log Graph.
  * This is an implementation of definition 3.2 in the article.
  * this graph model is based on the Fixed Degree Random Graph model in definition 3.1.
  *  n = num of vertexes in the graph.
  */
-public class RPLG {
+public class AdaptedFDRG implements RPLG {
     private final int nodeNum;
     private final double tau;
     ArrayList<Double> expectedDegreeSequence;
@@ -19,15 +22,16 @@ public class RPLG {
     private final Random random;
     private Graph<ComputerNode, DefaultEdge> graph;
 
-    public RPLG(int numOfNodesInGraph, double tau){
+    public AdaptedFDRG(int numOfNodesInGraph, double tau){
         nodeNum = numOfNodesInGraph;
         this.tau = tau;
         random = new Random();
         initExpectedDegreeSequenceAndNormFactor();
         generateGraph();
     }
+    // Todo - add nudes number threshold
 
-    public RPLG(int numOfNodesInGraph, double tau, long seed){
+    public AdaptedFDRG(int numOfNodesInGraph, double tau, long seed){
         nodeNum = numOfNodesInGraph;
         this.tau = tau;
         random = new Random(seed);
@@ -60,21 +64,56 @@ public class RPLG {
         for (int i = 0; i < nodeNum - 1; ++i){
             for (int j = i + 1; j < nodeNum; ++j){
                 double probability = Math.min(expectedDegreeSequence.get(i) * expectedDegreeSequence.get(j) * p, 1.0);
-                if (random.nextDouble() < probability){
+                if (random.nextDouble() < probability
+                    && !graph.containsEdge(nodes.get(i), nodes.get(j))){    // should we keep this check?
                     graph.addEdge(nodes.get(i), nodes.get(j));
+                    nodes.get(i).connectPort(nodes.get(j));
+                    nodes.get(j).connectPort(nodes.get(i));
                 }
             }
         }
     }
 
-    Graph<ComputerNode, DefaultEdge> getGraph(){
+    //region <Getters>
+    public Graph<ComputerNode, DefaultEdge> getGraph(){
         return graph;
     }
 
-    public static void main(String[] args) {
-        RPLG generator = new RPLG(100, 2.5);
-        Graph<ComputerNode, DefaultEdge> graph = generator.getGraph();
+    public int getNodeNum() { return nodeNum; }
 
-        System.out.println("Generated graph has " + graph.vertexSet().size() + " vertices and " + graph.edgeSet().size() + " edges.");
+    public double getTau() {
+        return tau;
+    }
+
+    public ArrayList<Double> getExpectedDegreeSequence() {
+        return expectedDegreeSequence;
+    }
+
+    public Random getRandom() { return random; }
+
+    //endregion
+
+    public static void main(String[] args) {
+        // Creating a simple undirected graph
+        Graph<String, DefaultEdge> graph = new SimpleGraph<>(DefaultEdge.class);
+
+        // Adding vertices
+        graph.addVertex("A");
+        graph.addVertex("B");
+        graph.addVertex("C");
+        graph.addVertex("D");
+
+
+        // Adding edges
+        graph.addEdge("A", "B");
+        graph.addEdge("A", "C");
+        graph.addEdge("B", "D");
+
+        AdaptedFDRG g = new AdaptedFDRG(10000, 2.3);
+
+        RoutingGraphBuilder builder = new RoutingGraphBuilder(g);
+
+        builder.process();
+
     }
 }
