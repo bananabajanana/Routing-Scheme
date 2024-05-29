@@ -64,3 +64,4 @@ __pycache__/            # Python 3 bytecode cache
 *.py[cod]               # Python bytecode files for Python 2
 *.pyc                   # Compiled Python files
 
+/checkstyle-idea.xml
