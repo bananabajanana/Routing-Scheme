@@ -10,7 +10,7 @@ import simulator.RouteType;
  */
 public class RoutingProcedure {
   private Graph<ComputerNode, DefaultEdge> network;
-  private RoutingProcedure instance;
+  private static RoutingProcedure instance;
 
   private RoutingProcedure() {}
 
@@ -19,7 +19,7 @@ public class RoutingProcedure {
 
    * @return Instance of the class
    */
-  public RoutingProcedure getInstance() {
+  public static RoutingProcedure getInstance() {
     if (instance == null) {
       instance = new RoutingProcedure();
     }
@@ -38,38 +38,47 @@ public class RoutingProcedure {
    * @return The amount of hops on the path from s to t
    */
   public int sendMessageNoHandshakes(ComputerNode s, ComputerNode t) {
-    boolean local = true; //TODO: replace with t\in Ball(s)
+    boolean local = s.getBall().contains(t);
     ComputerNode msgPosition;
     int hops = 0;
     Message message;
 
     if (local) {
       message = new Message(MessageHeader.newLocalHeader(s.getNodeIndex(), t.getNodeIndex()));
-      msgPosition = s.getPorts().get(s.getTbl().get(t));
+      msgPosition = s.getPorts().get(s.getTbl().get(t.getNodeIndex()));
       hops++;
     } else {
-      message = new Message(MessageHeader.newToLandmarkHeader(s.getNodeIndex(), t.getAddress()));
-      msgPosition = s.getPorts().get(s.getTbl().get(t.getAddress().getClosestLandmarkID()));
-      hops++;
+      if (t.getAddress().getClosestLandmarkId() != s.getNodeIndex()) {
+        message = new Message(MessageHeader.newToLandmarkHeader(s.getNodeIndex(), t.getAddress()));
+        msgPosition = s.getPorts().get(s.getTbl().get(t.getAddress().getClosestLandmarkId()));
+        hops++;
+      } else {
+        message = new Message(MessageHeader.newFromLandmarkHeader(s.getNodeIndex(),
+            t.getNodeIndex(), t.getAddress().getFromLandmarkPath()));
+
+        msgPosition = s.getPorts().get(
+            message.getHeader().getPath()[message.getHeader().getPosition()]);
+      }
     }
 
     while (msgPosition != t) {
       if (message.getHeader().getRouteType() == RouteType.local) {
-        msgPosition = msgPosition.getPorts().get(s.getTbl().get(t));
+        msgPosition = msgPosition.getPorts().get(msgPosition.getTbl().get(t.getNodeIndex()));
       } else if (message.getHeader().getRouteType() == RouteType.toLandmark) {
-        if (msgPosition.getNodeIndex() == message.getHeader().getAddress().getClosestLandmarkID()) {
+        if (msgPosition.getNodeIndex() == message.getHeader().getAddress().getClosestLandmarkId()) {
           message.setHeader(MessageHeader.newFromLandmarkHeader(
               message.getHeader().getSerializedS(),
-              message.getHeader().getAddress().getNodeID(),
-              message.getHeader().getPath()));
+              message.getHeader().getAddress().getNodeId(),
+              message.getHeader().getAddress().getFromLandmarkPath()));
 
           msgPosition = msgPosition.getPorts().get(
               message.getHeader().getPath()[message.getHeader().getPosition()]);
         } else {
-          msgPosition = msgPosition.getPorts().get(s.getTbl().get(
-              t.getAddress().getClosestLandmarkID()));
+          msgPosition = msgPosition.getPorts().get(msgPosition.getTbl().get(
+              t.getAddress().getClosestLandmarkId()));
         }
       } else if (message.getHeader().getRouteType() == RouteType.fromLandmark) {
+        message.getHeader().incrementPosition();
         msgPosition = msgPosition.getPorts().get(
             message.getHeader().getPath()[message.getHeader().getPosition()]);
       }
@@ -79,8 +88,8 @@ public class RoutingProcedure {
     return hops;
   }
 
-  private float expectedVal(float[] values) {
-    float sum = 0;
+  private double expectedVal(float[] values) {
+    double sum = 0;
     for (int i = 0; i < values.length; i++) {
       sum += values[i];
     }
@@ -88,13 +97,13 @@ public class RoutingProcedure {
     return sum;
   }
 
-  private float varianceVal(float[] values) {
-    float sum = 0;
+  private double varianceVal(float[] values) {
+    double sum = 0;
     for (int i = 0; i < values.length; i++) {
       sum += values[i];
     }
     sum /= values.length;
-    float output = 0;
+    double output = 0;
     for (int i = 0; i < values.length; i++) {
       output += ((values[i] - sum) * (values[i] - sum)) / (values.length - 1);
     }
@@ -104,19 +113,39 @@ public class RoutingProcedure {
   /**
    * Calculates the expected value and variance of the stretch value for a series of nodes.
    * Does this while ignoring the handshake procedure.
+   * Also prints all info on pairs in CSV format.
 
    * @param s An array of all the source nodes
    * @param t An array of all the target nodes
    * @param spLengths An array of the precalculated shortest paths between them
    * @return An array of the format { Exp, Var }
    */
-  public float[] expVarNoHandshakes(ComputerNode[] s, ComputerNode[] t, int[] spLengths) {
+  public double[] expVarNoHandshakes(ComputerNode[] s, ComputerNode[] t, int[] spLengths,
+      boolean csvPrint) {
+    if (csvPrint) {
+      System.out.println("s,t,d,msg,stretch");
+    }
+    float[] msgDistance = new float[s.length];
     float[] stretches = new float[s.length];
     for (int i = 0; i < s.length; i++) {
-      stretches[i] = ((float) sendMessageNoHandshakes(s[i], t[i])) / ((float) spLengths[i]);
+      msgDistance[i] = sendMessageNoHandshakes(s[i], t[i]);
+      stretches[i] = ((float) msgDistance[i]) / ((float) spLengths[i]);
+
+      if (csvPrint) {
+        System.out.println(
+            s[i].getNodeIndex() + "," + t[i].getNodeIndex() + "," + spLengths[i] + ","
+                + msgDistance[i] + "," + stretches[i]);
+      }
     }
 
-    float[] output = { expectedVal(stretches), varianceVal(stretches) };
+    double[] output = { expectedVal(stretches), varianceVal(stretches) };
+    if (csvPrint) {
+      System.out.println("");
+      System.out.println("Stretch: " + output[0] + " ± " + output[1]);
+      System.out.println("");
+      System.out.println("");
+    }
+
     return output;
   }
 
@@ -124,24 +153,44 @@ public class RoutingProcedure {
    * Calculates the expected value and variance of the stretch value for a series of nodes.
    * Does this while 'flattening' the handshake procedure (every two nodes that would've gone
    * through handshake, are calculated after the process)
+   * Also prints all info on pairs in CSV format.
 
    * @param s An array of all the source nodes
    * @param t An array of all the target nodes
    * @param spLengths An array of the precalculated shortest paths between them
    * @return An array of the format { Exp, Var }
    */
-  public float[] expVarWithHandshakes(ComputerNode[] s, ComputerNode[] t, int[] spLengths) {
+  public double[] expVarWithHandshakes(ComputerNode[] s, ComputerNode[] t, int[] spLengths,
+      boolean csvPrint) {
+    if (csvPrint) {
+      System.out.println("s,t,d,msg,stretch");
+    }
+    float[] msgDistance = new float[s.length];
     float[] stretches = new float[s.length];
     for (int i = 0; i < s.length; i++) {
-      boolean thirdCaseShouldSkip = false; //TODO: implement check
+      boolean thirdCaseShouldSkip = (!s[i].getBall().contains(t[i]))
+          && (t[i].getBall().contains(s[i]));
       if (thirdCaseShouldSkip) {
         stretches[i] = 1;
+        msgDistance[i] = spLengths[i];
       } else {
-        stretches[i] = ((float) sendMessageNoHandshakes(s[i], t[i])) / ((float) spLengths[i]);
+        msgDistance[i] = sendMessageNoHandshakes(s[i], t[i]);
+        stretches[i] = ((float) msgDistance[i]) / ((float) spLengths[i]);
+      }
+      if (csvPrint) {
+        System.out.println(s[i].getNodeIndex() + "," + t[i].getNodeIndex() + "," + spLengths[i]
+            + "," + msgDistance[i] + "," + stretches[i]);
       }
     }
 
-    float[] output = { expectedVal(stretches), varianceVal(stretches) };
+    double[] output = { expectedVal(stretches), varianceVal(stretches) };
+    if (csvPrint) {
+      System.out.println("");
+      System.out.println("Stretch: " + output[0] + " ± " + output[1]);
+      System.out.println("");
+      System.out.println("");
+    }
+
     return output;
   }
 }

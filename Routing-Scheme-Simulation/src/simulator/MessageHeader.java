@@ -159,6 +159,18 @@ public class MessageHeader {
   }
 
   /**
+   * Increments the position value bt one.
+   */
+  public void incrementPosition() {
+    if (routeType != RouteType.fromLandmark && routeType != RouteType.direct) {
+      throw new RuntimeException("HEADER: header which is not 'fromLandmark' or 'direct' tried to "
+          + "access position");
+    }
+
+    position++;
+  }
+
+  /**
    * MUST NOT BE type='local' or 'toLandmark'.
 
    * @return path from source to target
