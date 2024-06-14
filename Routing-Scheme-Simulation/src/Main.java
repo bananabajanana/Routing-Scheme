@@ -1,10 +1,22 @@
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Random;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BFSShortestPath;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultUndirectedGraph;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import simulator.ComputerNode;
 import simulator.RoutingGraphBuilder;
 import simulator.graphs.AdaptedFdrg;
@@ -24,6 +36,17 @@ public class Main {
   public static void main(String[] args) {
     rplgTest();
     //manualTest();
+    /*
+    try {
+      fileTest();
+    } catch (ParserConfigurationException e) {
+      throw new RuntimeException(e);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } catch (SAXException e) {
+      throw new RuntimeException(e);
+    }
+    */
   }
 
   /**
@@ -33,7 +56,7 @@ public class Main {
     RoutingProcedure rp = RoutingProcedure.getInstance();
 
     Random rand = new Random();
-    int n = 1000;
+    int n = 10000;
     float tau = 2.5f;
     int sampleSize = 250;
     AdaptedFdrg testGraph = new AdaptedFdrg(n, tau);
@@ -67,7 +90,7 @@ public class Main {
       }
     }
 
-    rp.expVarWithHandshakes(s, t, spLength, true);
+    rp.expVarWithHandshakes(s, t, spLength, false);
   }
 
   /**
@@ -147,5 +170,76 @@ public class Main {
 
     rp.expVarWithHandshakes(s, t, lengths, true);
     //endregion
+  }
+
+  public static void fileTest() throws ParserConfigurationException, IOException, SAXException {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+
+    File file = new File("Routing-Scheme-Simulation/src/testGraphs/graphTemp/N_10000_beta_2.5_08.xml");
+    Document doc = builder.parse(file);
+
+    Element root = doc.getDocumentElement();
+
+    Graph<ComputerNode, DefaultEdge> test = new DefaultUndirectedGraph<>(DefaultEdge.class);
+
+    //region <Load Graph from File>
+    NodeList nodes = ((Element)root.getElementsByTagName("snapshot").item(0))
+        .getElementsByTagName("node");
+    ComputerNode[] nodesArr = new ComputerNode[nodes.getLength()];
+    System.out.println("Loading Nodes: " + nodes.getLength() + "\n");
+    for(int i = 0; i < nodes.getLength(); i++) {
+      Node nNode = nodes.item(i);
+      Element eNode = (Element)nNode;
+
+      ComputerNode a = new ComputerNode(Integer.parseInt(eNode.getAttribute("ID")));
+      test.addVertex(a);
+      nodesArr[Integer.parseInt(eNode.getAttribute("ID"))] = a;
+      System.out.print("|");
+    }
+
+    System.out.println("Finished Loading Nodes\n");
+    NodeList edges = ((Element)root.getElementsByTagName("snapshot").item(0))
+        .getElementsByTagName("edge");
+    System.out.println("Loading Edges: " + edges.getLength() + "\n");
+    for(int i = 0; i < edges.getLength(); i++) {
+      Node nEdge = edges.item(i);
+      Element eEdge = (Element)nEdge;
+
+      test.addEdge(
+          nodesArr[Integer.parseInt(eEdge.getAttribute("nodeID_1"))],
+          nodesArr[Integer.parseInt(eEdge.getAttribute("nodeID_2"))]
+      );
+      System.out.print("|");
+    }
+    System.out.println("Finished Loading Edges\n");
+    //endregion
+
+    ArrayList<ComputerNode> coreTest = new ArrayList<>();
+
+    double tau = 2.5;
+    double gama = ((tau - 2) / ((2 * tau) - 3)) + (1E-12);
+    double gamaPrime = (1 - gama) / (tau - 1);
+    double coreDegreeThreshold = Math.pow(10000, gamaPrime) / 4;
+    System.out.println("Threshold: " + coreDegreeThreshold);
+
+    //TODO: core calculation seems wrong... for some reason every node has
+    //      either 4900 tbl lines or 1...
+    System.out.println("Loading Core\n");
+    for(ComputerNode node : test.vertexSet()) {
+      if(node.getDegree() > coreDegreeThreshold) {
+        coreTest.add(node);
+      }
+      System.out.print("|");
+    }
+    System.out.println("Finished Loading Core\n");
+
+    //region <Pre-Proccessing>
+    ManualGraphCore testWithCore = new ManualGraphCore(test, coreTest);
+    RoutingGraphBuilder testBuilder = new RoutingGraphBuilder(testWithCore);
+    testBuilder.process(true);
+    //endregion
+
+
   }
 }

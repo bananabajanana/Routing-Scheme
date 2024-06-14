@@ -164,11 +164,14 @@ public class RoutingGraphBuilder {
       sum += values[i];
     }
     sum /= values.length;
-    float output = 0;
+    double output = 0;
     for (int i = 0; i < values.length; i++) {
       output += ((values[i] - sum) * (values[i] - sum)) / (values.length - 1);
     }
-    return output;
+
+    output = Math.sqrt(output);
+
+    return (float)output;
   }
 
   public void process(boolean csvPrint){
