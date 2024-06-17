@@ -3,15 +3,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BFSShortestPath;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultUndirectedGraph;
+import org.jgrapht.graph.SimpleGraph;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -34,7 +37,42 @@ public class Main {
    * @param args noop
    */
   public static void main(String[] args) {
-    rplgTest();
+//    rplgTest();
+
+    Graph<ComputerNode, DefaultEdge> graph = new SimpleGraph<>(DefaultEdge.class);
+
+    ComputerNode v0 = new ComputerNode(0);
+    ComputerNode v1 = new ComputerNode(1);
+    ComputerNode v2 = new ComputerNode(2);
+    ComputerNode v3 = new ComputerNode(3);
+
+    graph.addVertex(v0);
+    graph.addVertex(v1);
+    graph.addVertex(v2);
+    graph.addVertex(v3);
+
+
+    DefaultEdge e01 = graph.addEdge(v0,v1);
+    DefaultEdge e12 = graph.addEdge(v1,v2);
+
+    ComputerNode source = graph.getEdgeSource(e01);
+    ComputerNode target = graph.getEdgeTarget(e01);
+    System.out.println("the edge source is: " + source.getNodeIndex());
+    System.out.println("the edge target is: " + target.getNodeIndex());
+
+
+    BFSShortestPath<ComputerNode, DefaultEdge> bfs = new BFSShortestPath<>(graph);
+    ShortestPathAlgorithm.SingleSourcePaths<ComputerNode, DefaultEdge> shortestPathsFromV =bfs.getPaths(v0);
+
+    GraphPath<ComputerNode, DefaultEdge> path = shortestPathsFromV.getPath(v1);
+    System.out.println("path length is: " + path.getLength());
+    List<ComputerNode> shortestPathToLandmark = shortestPathsFromV.getPath(v1).getVertexList();
+    int distFromCurrLandmark = shortestPathToLandmark.size() - 1;   // minus 1 for the num of edges
+    for (ComputerNode node : shortestPathToLandmark){
+      System.out.println(node.getNodeIndex());
+    }
+    System.out.println("path length is: " + distFromCurrLandmark);
+
     //manualTest();
     /*
     try {
