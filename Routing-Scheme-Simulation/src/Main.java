@@ -23,6 +23,7 @@ import org.xml.sax.SAXException;
 import simulator.ComputerNode;
 import simulator.RoutingGraphBuilder;
 import simulator.graphs.AdaptedFdrg;
+import simulator.graphs.GraphWithCore;
 import simulator.graphs.ManualGraphCore;
 
 /**
@@ -31,6 +32,14 @@ import simulator.graphs.ManualGraphCore;
  */
 public class Main {
 
+  public static void printAllVertexesDeg(Graph<ComputerNode, DefaultEdge> graph){
+    System.out.println("index , degree");
+    for(ComputerNode node : graph.vertexSet()){
+      System.out.println( node.getNodeIndex() + "," + node.getDegree());
+    }
+  }
+
+
   /**
    * Demo of the tests and analysis.
 
@@ -38,43 +47,9 @@ public class Main {
    */
   public static void main(String[] args) {
 //    rplgTest();
+//    manualTest2();
+//    manualTest();
 
-    Graph<ComputerNode, DefaultEdge> graph = new SimpleGraph<>(DefaultEdge.class);
-
-    ComputerNode v0 = new ComputerNode(0);
-    ComputerNode v1 = new ComputerNode(1);
-    ComputerNode v2 = new ComputerNode(2);
-    ComputerNode v3 = new ComputerNode(3);
-
-    graph.addVertex(v0);
-    graph.addVertex(v1);
-    graph.addVertex(v2);
-    graph.addVertex(v3);
-
-
-    DefaultEdge e01 = graph.addEdge(v0,v1);
-    DefaultEdge e12 = graph.addEdge(v1,v2);
-
-    ComputerNode source = graph.getEdgeSource(e01);
-    ComputerNode target = graph.getEdgeTarget(e01);
-    System.out.println("the edge source is: " + source.getNodeIndex());
-    System.out.println("the edge target is: " + target.getNodeIndex());
-
-
-    BFSShortestPath<ComputerNode, DefaultEdge> bfs = new BFSShortestPath<>(graph);
-    ShortestPathAlgorithm.SingleSourcePaths<ComputerNode, DefaultEdge> shortestPathsFromV =bfs.getPaths(v0);
-
-    GraphPath<ComputerNode, DefaultEdge> path = shortestPathsFromV.getPath(v1);
-    System.out.println("path length is: " + path.getLength());
-    List<ComputerNode> shortestPathToLandmark = shortestPathsFromV.getPath(v1).getVertexList();
-    int distFromCurrLandmark = shortestPathToLandmark.size() - 1;   // minus 1 for the num of edges
-    for (ComputerNode node : shortestPathToLandmark){
-      System.out.println(node.getNodeIndex());
-    }
-    System.out.println("path length is: " + distFromCurrLandmark);
-
-    //manualTest();
-    /*
     try {
       fileTest();
     } catch (ParserConfigurationException e) {
@@ -84,7 +59,7 @@ public class Main {
     } catch (SAXException e) {
       throw new RuntimeException(e);
     }
-    */
+
   }
 
   /**
@@ -95,12 +70,18 @@ public class Main {
 
     Random rand = new Random();
     int n = 10000;
-    float tau = 2.5f;
+    float tau = 2.3f;
     int sampleSize = 250;
     AdaptedFdrg testGraph = new AdaptedFdrg(n, tau);
 
     RoutingGraphBuilder testBuilder = new RoutingGraphBuilder(testGraph);
     testBuilder.process(true);
+    printAllVertexesDeg(testGraph.getGraph());
+    ///HELPER DATA PRINTING
+    System.out.println("\n\n~~~~~USEFUL-DATA~~~~~~\n");
+    testGraph.temporaryPrintThreshold();
+    System.out.println("Landmarks: " + testGraph.getCore().size());
+    ///END
 
     ComputerNode[] s = new ComputerNode[sampleSize];
     ComputerNode[] t = new ComputerNode[sampleSize];
@@ -128,14 +109,107 @@ public class Main {
       }
     }
 
-    rp.expVarWithHandshakes(s, t, spLength, false);
+    rp.expVarNoHandshakes(s, t, spLength, true);
   }
+
+
+  /**
+   * Demo of testing on a specific given graph.
+   */
+  public static void manualTest2() {
+
+    Graph<ComputerNode, DefaultEdge> test = new DefaultUndirectedGraph<>(DefaultEdge.class);
+
+    for(int i = 0; i < 1000; i++) {
+      test.addVertex((new ComputerNode(i)));
+    }
+    Object[] arr = test.vertexSet().toArray();
+
+    for(int i = 0; i < 1000; i++) {
+      test.addEdge((ComputerNode) arr[i%1000], (ComputerNode) arr[(i+1)%1000]);
+    }
+    ArrayList<ComputerNode> coreTest = new ArrayList<>();
+    for(int i = 0; i < 1000; i+=100) {
+      coreTest.add((ComputerNode) arr[i]);
+    }
+
+//
+//    //region <Vertices>
+//    ComputerNode a = new ComputerNode(1);
+//    test.addVertex(a);
+//    ComputerNode c = new ComputerNode(3);
+//    test.addVertex(c);
+//    ComputerNode b = new ComputerNode(2);
+//    test.addVertex(b);
+//    ComputerNode d = new ComputerNode(4);
+//    test.addVertex(d);
+//    ComputerNode e = new ComputerNode(5);
+//    test.addVertex(e);
+//    ComputerNode f = new ComputerNode(6);
+//    test.addVertex(f);
+//    ComputerNode g = new ComputerNode(7);
+//    test.addVertex(g);
+//    ComputerNode h = new ComputerNode(8);
+//    test.addVertex(h);
+//    ComputerNode i = new ComputerNode(9);
+//    test.addVertex(i);
+//    ComputerNode j = new ComputerNode(10);
+//    test.addVertex(j);
+//    ComputerNode k = new ComputerNode(11);
+//    test.addVertex(k);
+//    ComputerNode l = new ComputerNode(12);
+//    test.addVertex(l);
+//    ComputerNode m = new ComputerNode(13);
+//    test.addVertex(m);
+//    ComputerNode n = new ComputerNode(14);
+//    test.addVertex(n);
+//    ComputerNode o = new ComputerNode(15);
+//    test.addVertex(o);
+//    ComputerNode p = new ComputerNode(16);
+//    test.addVertex(p);
+//    //endregion
+//
+//    //region <Edges>
+//    ComputerNode[] pairs = {
+//            a, b, e, h, j, k, a, d, f, g, j, l, b, c, g, h,
+//            l, m, c, h, g, i, m, n, d, e, h, i, m, o, d, f,
+//            h, j, n, o, o, p, i, j, e, f, i, p
+//    };
+//    for (int ii = 0; ii < pairs.length; ii += 2) {
+//      test.addEdge(pairs[ii], pairs[ii + 1]);
+//    }
+//    //endregion
+
+    //region <Core>
+//    ArrayList<ComputerNode> coreTest = new ArrayList<>();
+//    coreTest.add(h);
+//    coreTest.add(g);
+//    coreTest.add(i);
+    //endregion
+
+    //region <Pre-Proccessing>
+    ManualGraphCore testWithCore2 = new ManualGraphCore(test, coreTest);
+    RoutingGraphBuilder testBuilder = new RoutingGraphBuilder(testWithCore2);
+    testBuilder.process(true);
+    //endregion
+    printAllVertexesDeg(testWithCore2.getGraph());
+    //region <Algorithm>
+    RoutingProcedure rp = RoutingProcedure.getInstance();
+
+    rp.setNetwork(test);
+//    ComputerNode[] s = {a, e, e, p, g, o};
+//    ComputerNode[] t = {c, a, f, k, j, l};
+//    int[] lengths =    {2, 2, 1, 3, 2, 2};
+//
+//    rp.expVarWithHandshakes(s, t, lengths, false);
+    //endregion
+  }
+
 
   /**
    * Demo of testing on a specific given graph.
    */
   public static void manualTest() {
-
 
     Graph<ComputerNode, DefaultEdge> test = new DefaultUndirectedGraph<>(DefaultEdge.class);
 
@@ -214,7 +288,7 @@ public class Main {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
 
-    File file = new File("Routing-Scheme-Simulation/src/testGraphs/graphTemp/N_10000_beta_2.5_08.xml");
+    File file = new File("C:\\Users\\katzi\\IdeaProjects\\Routing-Scheme\\Routing-Scheme-Simulation\\src\\testGraphs\\N_10000_beta_2.7_15.xml");
     Document doc = builder.parse(file);
 
     Element root = doc.getDocumentElement();
@@ -255,7 +329,7 @@ public class Main {
 
     ArrayList<ComputerNode> coreTest = new ArrayList<>();
 
-    double tau = 2.5;
+    double tau = 2.7;
     double gama = ((tau - 2) / ((2 * tau) - 3)) + (1E-12);
     double gamaPrime = (1 - gama) / (tau - 1);
     double coreDegreeThreshold = Math.pow(10000, gamaPrime) / 4;
@@ -265,12 +339,12 @@ public class Main {
     //      either 4900 tbl lines or 1...
     System.out.println("Loading Core\n");
     for(ComputerNode node : test.vertexSet()) {
-      if(node.getDegree() > coreDegreeThreshold) {
+      if(test.edgesOf(node).size() > coreDegreeThreshold) {
         coreTest.add(node);
       }
       System.out.print("|");
     }
-    System.out.println("Finished Loading Core\n");
+    System.out.println("\nFinished Loading Core of size: " + coreTest.size());
 
     //region <Pre-Proccessing>
     ManualGraphCore testWithCore = new ManualGraphCore(test, coreTest);
@@ -278,6 +352,6 @@ public class Main {
     testBuilder.process(true);
     //endregion
 
-
+    printAllVertexesDeg(testWithCore.getGraph());
   }
 }
