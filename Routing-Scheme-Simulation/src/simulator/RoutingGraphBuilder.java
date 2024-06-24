@@ -46,17 +46,24 @@ public class RoutingGraphBuilder {
    *  -   the distance from a landmark to its closest landmark (i.e. itself) is zero
    *  -   in the table of a landmark there is no entry for a port that's connected to itself
    *      (that means that if v is a landmark then there is no entry in its tbl for itself)
-
+   *
+   * If there is no path from v to any landmark then the "closestLandmark" member
+   * field of v will remain null and the "distanceToClosestLandmark" member field
+   * will have the value of Double.POSITIVE_INFINITY.
+   * (this case happens when v is a vertex in a connectivity component that is
+   * not connected to any connectivity component that have a landmark in it)
+   *
+   *
    * @param v a vertex in the graph
    * @param shortestPathsFromV all the shortest paths from v to every other node in the graph
    */
   private void processCore(ComputerNode v, ShortestPathAlgorithm.SingleSourcePaths<ComputerNode,
       DefaultEdge> shortestPathsFromV) {
-    double minDistFromNodeToCore = Double.MAX_VALUE;
+    double minDistFromNodeToCore = Double.POSITIVE_INFINITY;
     ComputerNode closestLandmarkToNode = null;
     for (ComputerNode landmark : core){
       GraphPath<ComputerNode, DefaultEdge> path = shortestPathsFromV.getPath(landmark);
-      if (path != null) {
+      if (path != null) { // check if there is a path from v to the current landmark
         List<ComputerNode> shortestPathToLandmark = shortestPathsFromV.getPath(landmark).getVertexList();
         int distFromCurrLandmark = shortestPathToLandmark.size() - 1;   // minus 1 for the num of edges
 
@@ -79,10 +86,16 @@ public class RoutingGraphBuilder {
   /**
    * Iterating on all the graphs vertexes while looking for vertexes that should
    * be included in the Ball of the given vertex v.
+   *
    * A vertex is in the ball of v if and only if the distance of it from v is smaller
    * than the distance of v from the closest landmark to v.
-   * (i.e u is in ball(v) if and only if d(v,u) < d(v,l(u))
+   * (i.e. vertex u is in ball(v) if and only if d(v,u) < d(v,l(u))
    * the vertex v itself is not included in its Ball (even tho by the definition it should be I guess)
+   *
+   * If a there is no paths from any Landmark in the graphs core to vertex v
+   * then the ball of v will be all the vertexes that are reachable from v.
+   * (the distance from v to the core wil be Double.POSITIVE_INFINITY)
+   *
    * @param v the vertex in the middle of the ball
    * @param pathsFromV all the shortest paths from v to every other vertex in the graph
    */
@@ -90,12 +103,13 @@ public class RoutingGraphBuilder {
     for (ComputerNode u : graphWithCore.getGraph().vertexSet()){
       if (u != v ){
         GraphPath<ComputerNode, DefaultEdge> path = pathsFromV.getPath(u);
-        if (path != null) {
+        if (path != null) { // check if there is a path from v to u
           List<ComputerNode> shortestPathToU = path.getVertexList();
           int lenOfShortestPathToU = shortestPathToU.size() - 1;
           if (lenOfShortestPathToU < v.getDistanceToClosestLandmark()) {
             if (shortestPathToU.size() > SINGLE_VERTEX_PATH_LEN) {
-              shortestPathToU.get(0).setNeighborPortInPathToNodeInTbl(u, shortestPathToU.get(1));
+//              shortestPathToU.get(0).setNeighborPortInPathToNodeInTbl(u, shortestPathToU.get(1));
+              v.setNeighborPortInPathToNodeInTbl(u, shortestPathToU.get(1));
             }
             v.insertNodeToBall(u);
           }
@@ -108,15 +122,19 @@ public class RoutingGraphBuilder {
    * Returns an int array for the ports that are used in a shortest path from
    * the closest landmark to v to the vertex v itself.
    *
+   * If the vertex v is itself a landmark then an empty array will be returned.
+   *
+   * If there are no paths from v to any landmark then an empty array will be returned.
+   *
    * @param v a vertex in the graph.
-   * @return an empty array if there is no path to v from the landmarks.
+   * @return a port array of the nodes in a shortest path from the closest landmark to v to the vertex v itself.
    */
   private int[] getRevPortPathFromClosestLandmark(ComputerNode v){
     ComputerNode closestLandmarkToV = v.getClosestLandmark();
-    List<ComputerNode> path = v.getShortestPathToLandmark(closestLandmarkToV);
-    if (path == null){
+    if (closestLandmarkToV == null){
       return new int[0];
     }
+    List<ComputerNode> path = v.getShortestPathToLandmark(closestLandmarkToV);
     int len = path.size() - 1;
     int[] revPortPath = new int[len]; // no need for port in the last node (that is the target node)
 
@@ -180,7 +198,7 @@ public class RoutingGraphBuilder {
     BFSShortestPath<ComputerNode, DefaultEdge> bfs = new BFSShortestPath<>(graphWithCore.getGraph());
 
     if(csvPrint) {
-      System.out.println("u,tblLines");
+      System.out.println("u,tblLines,amountFromCore,amountFromBall");
     }
     float tableSizes[] = new float[graphWithCore.getGraph().vertexSet().size()];
     int i = 0;
@@ -191,7 +209,7 @@ public class RoutingGraphBuilder {
       findAndProcessBallOfNode(v,shortestPathsFromV);
       initAddress(v);
       if(csvPrint) {
-        System.out.println(v.getNodeIndex() + "," + v.getTbl().size());
+        System.out.println(v.getNodeIndex() + "," + v.getTbl().size() + "," + (v.getTbl().size() - v.getBall().size()) + "," + v.getBall().size());
         tableSizes[i++] = v.getTbl().size();
       }
     }

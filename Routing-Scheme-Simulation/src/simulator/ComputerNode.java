@@ -32,7 +32,7 @@ public class ComputerNode {
     shortestPathsToLandmarks = new HashMap<>();
     neighborCounter = 0;
     closestLandmark = null;
-    distanceToClosestLandmark = Double.MAX_VALUE;
+    distanceToClosestLandmark = Double.POSITIVE_INFINITY;
     ball = new ArrayList<>();
   }
 
@@ -111,7 +111,7 @@ public class ComputerNode {
   }
   //endregion
 
-  //region <Getters>
+  //region <Setters>
 
   /**
    * Inserts a key-value pair to this node table.
@@ -131,11 +131,11 @@ public class ComputerNode {
 
    * @param distance calculated distance
    */
-  public void setDistanceToClosestLandmark(double distance) {
-    if (distance < 0) {
-      distanceToClosestLandmark = Double.MAX_VALUE;
-    } else {
-      distanceToClosestLandmark = distance;
+  public void setDistanceToClosestLandmark(Double distance) {
+    if (distance < 0 || distance == Double.POSITIVE_INFINITY) {
+      distanceToClosestLandmark = Double.POSITIVE_INFINITY;
+    } else if (this.distanceToClosestLandmark > distance) {
+      this.distanceToClosestLandmark = distance;
     }
   }
 
