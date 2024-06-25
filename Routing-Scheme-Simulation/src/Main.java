@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -57,7 +58,7 @@ public class Main {
 
     try {
 //      fileTest();
-      multipleFileTests(2.1, 1000);
+      multipleFileTests(2.9, 1000);
     } catch (ParserConfigurationException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {
@@ -299,7 +300,7 @@ public class Main {
 
     for(int i = 1; i <= fileAmount; i++) {
       System.out.print("\n" + i + "/" + fileAmount);
-      String path = "Routing-Scheme-Simulation/src/testGraphs/graphTemp/N_"
+      String path = "Routing-Scheme-Simulation/src/testGraphs/N_"
           + nodesNum + "_beta_" + tau + "_" + String.format("%02d", i) + ".xml";
       fileTest(nodesNum, tau, sampleSize, path, Print.Answer, Print.Answer, false);
     }
@@ -321,6 +322,63 @@ public class Main {
     coreTest = new ArrayList<>(coreNodes);
 
     return coreTest;
+  }
+
+  public static ArrayList<ComputerNode> ThorupAndZwickCoreSelection(double tau, int nodesNum, Graph<ComputerNode, DefaultEdge> graph){
+    BiFunction<ArrayList<ComputerNode>, Double, ArrayList<ComputerNode> > sample = (ArrayList<ComputerNode> w, Double s) -> {
+      ArrayList<ComputerNode> selectedSubSet = new ArrayList<>();
+      double len = w.size();
+      Random random = new Random();
+      final double probabilityForVertexToBeSelected = s / len;
+      if(len <= s){
+        return selectedSubSet;
+      }
+      for (ComputerNode vertex : w){
+        if(random.nextDouble() < probabilityForVertexToBeSelected){
+          selectedSubSet.add(vertex);
+        }
+      }
+      return selectedSubSet;
+    };
+
+    BFSShortestPath<ComputerNode, DefaultEdge> bfs = new BFSShortestPath<>(graph);
+    BiFunction<ArrayList<ComputerNode>, ComputerNode, Integer> findClusterSizeInUndirectedGraph = (ArrayList<ComputerNode> core, ComputerNode vertexToFindCoreTo) -> {
+      ShortestPathAlgorithm.SingleSourcePaths<ComputerNode, DefaultEdge> shortestPathsFromV =bfs.getPaths(vertexToFindCoreTo);
+      Double distFromClosestLandmark = Double.POSITIVE_INFINITY;
+      Integer clusterSize = 0;
+      for (ComputerNode landmark : core){
+        if (vertexToFindCoreTo == landmark){
+          return 0;
+        }
+        GraphPath<ComputerNode, DefaultEdge> path = shortestPathsFromV.getPath(landmark);
+        if(path != null){
+          distFromClosestLandmark = distFromClosestLandmark < path.getLength() ? distFromClosestLandmark : path.getLength();
+        }
+      }
+      for (ComputerNode node : graph.vertexSet()){
+        if (node == vertexToFindCoreTo){ continue;}
+        if (shortestPathsFromV.getPath(node).getLength() < distFromClosestLandmark){
+          clusterSize++;
+        }
+      }
+      return clusterSize;
+    };
+
+    Double s = Math.sqrt((nodesNum / Math.log(nodesNum)));
+    Double wThreshold = (4 * nodesNum) / s;
+    ArrayList<ComputerNode> core = new ArrayList<>();
+    ArrayList<ComputerNode> w = new ArrayList<ComputerNode>(graph.vertexSet());
+
+    while (!w.isEmpty()){
+      core.addAll(sample.apply(w, s));
+      w.clear();
+      for(ComputerNode node : w){
+        if (findClusterSizeInUndirectedGraph.apply(core, node) > wThreshold){
+          w.add(node);
+        }
+      }
+    }
+    return core;
   }
 
   public static ArrayList<ComputerNode> theoreticalCoreSelection(double tau, int nodesNum, Graph<ComputerNode, DefaultEdge> graph) {
@@ -405,7 +463,8 @@ public class Main {
     System.out.print(".");
     //endregion
 
-    ArrayList<ComputerNode> coreTest = practicalCoreSelection(tau, nodesNum, LCC);
+    ArrayList<ComputerNode> coreTest = ThorupAndZwickCoreSelection(tau, nodesNum, LCC);
+//    ArrayList<ComputerNode> coreTest = practicalCoreSelection(tau, nodesNum, LCC);
 //    ArrayList<ComputerNode> coreTest = theoreticalCoreSelection(tau, nodesNum, LCC);
     System.out.print(".");
 
