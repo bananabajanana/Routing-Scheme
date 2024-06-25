@@ -4,6 +4,7 @@ import simulator.ComputerNode;
 import simulator.Message;
 import simulator.MessageHeader;
 import simulator.RouteType;
+import simulator.RoutingGraphBuilder.Print;
 
 /**
  * A simulation of the message forwarding procedure on a pre-processed graph.
@@ -121,8 +122,8 @@ public class RoutingProcedure {
    * @return An array of the format { Exp, Var }
    */
   public double[] expVarNoHandshakes(ComputerNode[] s, ComputerNode[] t, int[] spLengths,
-      boolean csvPrint) {
-    if (csvPrint) {
+      Print csvPrint) {
+    if (csvPrint == Print.Detailed) {
       System.out.println("s,t,d,msg,stretch");
     }
     float[] msgDistance = new float[s.length];
@@ -131,7 +132,7 @@ public class RoutingProcedure {
       msgDistance[i] = sendMessageNoHandshakes(s[i], t[i]);
       stretches[i] = ((float) msgDistance[i]) / ((float) spLengths[i]);
 
-      if (csvPrint) {
+      if (csvPrint == Print.Detailed) {
         System.out.println(
             s[i].getNodeIndex() + "," + t[i].getNodeIndex() + "," + spLengths[i] + ","
                 + msgDistance[i] + "," + stretches[i]);
@@ -139,11 +140,8 @@ public class RoutingProcedure {
     }
 
     double[] output = { expectedVal(stretches), varianceVal(stretches) };
-    if (csvPrint) {
-      System.out.println("");
+    if (csvPrint != Print.NONE) {
       System.out.println("Stretch: " + output[0] + " ± " + output[1]);
-      System.out.println("");
-      System.out.println("");
     }
 
     return output;
