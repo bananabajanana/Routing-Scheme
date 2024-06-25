@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -56,7 +57,7 @@ public class Main {
 
     try {
 //      fileTest();
-      multipleFileTests(2.2, 1000);
+      multipleFileTests(2.1, 1000);
     } catch (ParserConfigurationException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {
@@ -64,7 +65,6 @@ public class Main {
     } catch (SAXException e) {
       throw new RuntimeException(e);
     }
-
   }
 
   /**
@@ -299,11 +299,43 @@ public class Main {
 
     for(int i = 1; i <= fileAmount; i++) {
       System.out.print("\n" + i + "/" + fileAmount);
-      String path = "./Routing-Scheme/Routing-Scheme/Routing-Scheme-Simulation/src/testGraphs/graphTemp/N_"
+      String path = "Routing-Scheme-Simulation/src/testGraphs/graphTemp/N_"
           + nodesNum + "_beta_" + tau + "_" + String.format("%02d", i) + ".xml";
       fileTest(nodesNum, tau, sampleSize, path, Print.Answer, Print.Answer, false);
     }
 
+  }
+
+
+  public static ArrayList<ComputerNode> practicalCoreSelection(double tau, int nodesNum, Graph<ComputerNode, DefaultEdge> graph) {
+    ArrayList<ComputerNode> coreTest;
+
+    double gama = ((tau - 2) / ((2 * tau) - 3)) + (1E-12);
+    long gamaCeil = (long)Math.ceil(Math.pow(nodesNum, gama));
+
+    List<ComputerNode> coreNodes = graph.vertexSet().stream()
+        .sorted((v1, v2) -> Integer.compare(graph.degreeOf(v2), graph.degreeOf(v1)))
+        .limit(gamaCeil)
+        .collect(Collectors.toList());
+
+    coreTest = new ArrayList<>(coreNodes);
+
+    return coreTest;
+  }
+
+  public static ArrayList<ComputerNode> theoreticalCoreSelection(double tau, int nodesNum, Graph<ComputerNode, DefaultEdge> graph) {
+    ArrayList<ComputerNode> coreTest = new ArrayList<>();
+
+    double gama = ((tau - 2) / ((2 * tau) - 3)) + (1E-12);
+    double gamaPrime = (1 - gama) / (tau - 1);
+    double coreDegreeThreshold = Math.pow(nodesNum, gamaPrime) / 4;
+
+    for(ComputerNode node : graph.vertexSet()) {
+      if(graph.edgesOf(node).size() > coreDegreeThreshold) {
+        coreTest.add(node);
+      }
+    }
+    return coreTest;
   }
 
   public static void fileTest(int nodesNum, double tau, int sampleSize, String path, Print printTbls, Print printDists, boolean printDegs) throws ParserConfigurationException, IOException, SAXException {
@@ -373,22 +405,15 @@ public class Main {
     System.out.print(".");
     //endregion
 
-    ArrayList<ComputerNode> coreTest = new ArrayList<>();
-
-    double gama = ((tau - 2) / ((2 * tau) - 3)) + (1E-12);
-    double gamaPrime = (1 - gama) / (tau - 1);
-    double coreDegreeThreshold = Math.pow(nodesNum, gamaPrime) / 4;
-
-    //TODO: core calculation seems wrong... for some reason every node has
-    //      either 4900 tbl lines or 1...
-    for(ComputerNode node : LCC.vertexSet()) {
-      if(LCC.edgesOf(node).size() > coreDegreeThreshold) {
-        coreTest.add(node);
-      }
-    }
+    ArrayList<ComputerNode> coreTest = practicalCoreSelection(tau, nodesNum, LCC);
+//    ArrayList<ComputerNode> coreTest = theoreticalCoreSelection(tau, nodesNum, LCC);
     System.out.print(".");
 
     System.out.println("\nNodes In LCC: " + largestComponent.size() + "\nNodes In Core: " + coreTest.size());
+
+    if(coreTest.size() == 0) {
+      return;
+    }
 
     //region <Pre-Proccessing>
     ManualGraphCore testWithCore = new ManualGraphCore(LCC, coreTest);
