@@ -222,7 +222,7 @@ public class RoutingGraphBuilder {
 
 
     if(csvPrint != Print.NONE) {
-      System.out.println("\nAmount of Table Lines per Node: " + expectedVal(tableSizes) + " ± " + varianceVal(tableSizes));
+      System.out.print(expectedVal(tableSizes) + "," + varianceVal(tableSizes) + ",");
     }
   }
   //endregion

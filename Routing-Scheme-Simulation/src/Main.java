@@ -1,9 +1,13 @@
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -32,6 +36,7 @@ import simulator.RoutingGraphBuilder.Print;
 import simulator.graphs.AdaptedFdrg;
 import simulator.graphs.GraphWithCore;
 import simulator.graphs.ManualGraphCore;
+import java.awt.Toolkit;
 
 /**
  * Temporary Main class.
@@ -56,9 +61,46 @@ public class Main {
 //    manualTest2();
 //    manualTest();
 
+    Toolkit.getDefaultToolkit().beep();
     try {
 //      fileTest();
-      multipleFileTests(2.9, 1000);
+      PrintStream stdout = System.out;
+      Date d1, d2 = new Date();
+      int nodesNum = 100000;
+
+      double[] taus = {2.9, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.1};
+//      for(int i = 0; i < taus.length; i++) {
+//        System.out.println("Working on t=" + taus[i] + "...");
+//        d1 = new Date();
+//        System.out.println("Time of Start :" + d1);
+//        long diffMill = Math.abs(d1.getTime() - d2.getTime());
+//        System.out.println("Time difference in seconds :" + 0.001 * diffMill);
+//        d2 = d1;
+//
+////        double gama = ((taus[i] - 2) / ((2 * taus[i]) - 3)) + (1E-12);
+////        long gamaCeil = (long)Math.ceil(Math.pow(nodesNum, gama));
+//
+////        multipleFileTestsManualCoreSize(nodesNum, taus[i], 1000, gamaCeil);
+//        //multipleFileTests(taus[i], 2000, Integer.parseInt(args[0]));
+//        multipleFileTests(taus[i], 2000, nodesNum);
+//        System.setOut(stdout);
+//      }
+
+        System.out.println("Working on t=" + taus[Integer.parseInt(args[0])] + "...");
+        d1 = new Date();
+        System.out.println("Time of Start :" + d1);
+        long diffMill = Math.abs(d1.getTime() - d2.getTime());
+        System.out.println("Time difference in seconds :" + 0.001 * diffMill);
+        d2 = d1;
+
+//        double gama = ((taus[i] - 2) / ((2 * taus[i]) - 3)) + (1E-12);
+//        long gamaCeil = (long)Math.ceil(Math.pow(nodesNum, gama));
+
+//        multipleFileTestsManualCoreSize(nodesNum, taus[i], 1000, gamaCeil);
+        //multipleFileTests(taus[i], 2000, Integer.parseInt(args[0]));
+        multipleFileTests(taus[Integer.parseInt(args[0])], 2000, nodesNum);
+        System.setOut(stdout);
+
     } catch (ParserConfigurationException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {
@@ -66,6 +108,9 @@ public class Main {
     } catch (SAXException e) {
       throw new RuntimeException(e);
     }
+
+    System.out.println("Done!");
+    Toolkit.getDefaultToolkit().beep();
   }
 
   /**
@@ -290,21 +335,46 @@ public class Main {
     //endregion
   }
 
-  public static void multipleFileTests(double tau, int sampleSize)
+  public static void multipleFileTestsManualCoreSize(int nodesNum, double tau, int sampleSize, long coreSize)
+      throws ParserConfigurationException, IOException, SAXException {
+    int fileAmount = 30;
+
+    System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("Routing-Scheme-Simulation/Outputs/thresh"
+        + tau + "_n" + nodesNum + "_cs" + coreSize + ".txt")), true));
+
+    System.out.println("LCCNodesNum,ExpTblSize,VarTblSize,ExpDistStretch,VarDistStretch");
+    for(int i = 1; i <= fileAmount; i++) {
+      String path = "Routing-Scheme-Simulation/src/testGraphs/graphTemp/N_"
+          + nodesNum + "_beta_" + tau + "_" + String.format("%02d", i) + ".xml";
+      fileTest(nodesNum, tau, sampleSize, path, Print.Answer, Print.Answer, false);
+    }
+  }
+
+  public static void multipleFileTests(double tau, int sampleSize, int nodesNum)
       throws ParserConfigurationException, IOException, SAXException {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
 
     int fileAmount = 30;
-    int nodesNum = 10000;
 
+    System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("Routing-Scheme-Simulation/Outputs/p"
+        + tau + "_n" + nodesNum + ".txt")), true));
+
+//    System.out.println("nodesNum,LCCNodesNum,tau,bestThreshold");
+    System.out.println("LCCNodesNum,tblSizeExp,tblSizeVar,stretchExp,stretchVar");
     for(int i = 1; i <= fileAmount; i++) {
-      System.out.print("\n" + i + "/" + fileAmount);
-      String path = "Routing-Scheme-Simulation/src/testGraphs/N_"
+      //System.out.print("\n" + i + "/" + fileAmount);
+      String path = "Routing-Scheme-Simulation/src/testGraphs/graphTemp/N_"
           + nodesNum + "_beta_" + tau + "_" + String.format("%02d", i) + ".xml";
       fileTest(nodesNum, tau, sampleSize, path, Print.Answer, Print.Answer, false);
+//      findBarrier(nodesNum, tau, path);
     }
 
+    //double gama = ((tau - 2) / ((2 * tau) - 3)) + (1E-12);
+    //double gamaPrime = (1 - gama) / (tau - 1);
+    //double coreDegreeThreshold = Math.pow(nodesNum, gamaPrime) / 4;
+    double coreDegreeThreshold = (0.294 * nodesNum + 2586.3) * Math.pow(1 / (2.85765 * Math.pow(nodesNum, 0.118)), tau);
+    System.out.println("\n Theoretical Threshold was " + coreDegreeThreshold);
   }
 
 
@@ -317,6 +387,18 @@ public class Main {
     List<ComputerNode> coreNodes = graph.vertexSet().stream()
         .sorted((v1, v2) -> Integer.compare(graph.degreeOf(v2), graph.degreeOf(v1)))
         .limit(gamaCeil)
+        .collect(Collectors.toList());
+
+    coreTest = new ArrayList<>(coreNodes);
+
+    return coreTest;
+  }
+  public static ArrayList<ComputerNode> practicalCoreSelection(double tau, int nodesNum, Graph<ComputerNode, DefaultEdge> graph, long coreSize) {
+    ArrayList<ComputerNode> coreTest;
+
+    List<ComputerNode> coreNodes = graph.vertexSet().stream()
+        .sorted((v1, v2) -> Integer.compare(graph.degreeOf(v2), graph.degreeOf(v1)))
+        .limit(coreSize)
         .collect(Collectors.toList());
 
     coreTest = new ArrayList<>(coreNodes);
@@ -384,9 +466,10 @@ public class Main {
   public static ArrayList<ComputerNode> theoreticalCoreSelection(double tau, int nodesNum, Graph<ComputerNode, DefaultEdge> graph) {
     ArrayList<ComputerNode> coreTest = new ArrayList<>();
 
-    double gama = ((tau - 2) / ((2 * tau) - 3)) + (1E-12);
-    double gamaPrime = (1 - gama) / (tau - 1);
-    double coreDegreeThreshold = Math.pow(nodesNum, gamaPrime) / 4;
+    //double gama = ((tau - 2) / ((2 * tau) - 3)) + (1E-12);
+    //double gamaPrime = (1 - gama) / (tau - 1);
+    //double coreDegreeThreshold = Math.pow(nodesNum, gamaPrime) / 4;
+    double coreDegreeThreshold = (0.294 * nodesNum + 2586.3) * Math.pow(1 / (2.85765 * Math.pow(nodesNum, 0.118)), tau);
 
     for(ComputerNode node : graph.vertexSet()) {
       if(graph.edgesOf(node).size() > coreDegreeThreshold) {
@@ -400,7 +483,6 @@ public class Main {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
     RoutingProcedure rp = RoutingProcedure.getInstance();
-    System.out.print("\n");
 
     File file = new File(path);
     Document doc = builder.parse(file);
@@ -422,7 +504,6 @@ public class Main {
       nodesArr[Integer.parseInt(eNode.getAttribute("ID"))] = a;
     }
 
-    System.out.print(".");
     NodeList edges = ((Element)root.getElementsByTagName("snapshot").item(0))
         .getElementsByTagName("edge");
     for(int i = 0; i < edges.getLength(); i++) {
@@ -434,7 +515,6 @@ public class Main {
           nodesArr[Integer.parseInt(eEdge.getAttribute("nodeID_2"))]
       );
     }
-    System.out.print(".");
     //endregion
 
     //region Filtering LCC
@@ -460,15 +540,13 @@ public class Main {
       }
     }
 
-    System.out.print(".");
     //endregion
 
-    ArrayList<ComputerNode> coreTest = ThorupAndZwickCoreSelection(tau, nodesNum, LCC);
+//    ArrayList<ComputerNode> coreTest = ThorupAndZwickCoreSelection(tau, nodesNum, LCC);
 //    ArrayList<ComputerNode> coreTest = practicalCoreSelection(tau, nodesNum, LCC);
-//    ArrayList<ComputerNode> coreTest = theoreticalCoreSelection(tau, nodesNum, LCC);
-    System.out.print(".");
+    ArrayList<ComputerNode> coreTest = theoreticalCoreSelection(tau, nodesNum, LCC);
 
-    System.out.println("\nNodes In LCC: " + largestComponent.size() + "\nNodes In Core: " + coreTest.size());
+    System.out.print(largestComponent.size() + ",");
 
     if(coreTest.size() == 0) {
       return;
@@ -512,5 +590,184 @@ public class Main {
     if(printDegs) {
       printAllVertexesDeg(testWithCore.getGraph());
     }
+  }
+
+  public static void fileTest(int nodesNum, double tau, int sampleSize, String path, Print printTbls, Print printDists, boolean printDegs, long coreSize) throws ParserConfigurationException, IOException, SAXException {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    RoutingProcedure rp = RoutingProcedure.getInstance();
+
+    File file = new File(path);
+    Document doc = builder.parse(file);
+
+    Element root = doc.getDocumentElement();
+
+    Graph<ComputerNode, DefaultEdge> test = new DefaultUndirectedGraph<>(DefaultEdge.class);
+
+    //region <Load Graph from File>
+    NodeList nodes = ((Element)root.getElementsByTagName("snapshot").item(0))
+        .getElementsByTagName("node");
+    ComputerNode[] nodesArr = new ComputerNode[nodes.getLength()];
+    for(int i = 0; i < nodes.getLength(); i++) {
+      Node nNode = nodes.item(i);
+      Element eNode = (Element)nNode;
+
+      ComputerNode a = new ComputerNode(Integer.parseInt(eNode.getAttribute("ID")));
+      test.addVertex(a);
+      nodesArr[Integer.parseInt(eNode.getAttribute("ID"))] = a;
+    }
+
+    NodeList edges = ((Element)root.getElementsByTagName("snapshot").item(0))
+        .getElementsByTagName("edge");
+    for(int i = 0; i < edges.getLength(); i++) {
+      Node nEdge = edges.item(i);
+      Element eEdge = (Element)nEdge;
+
+      test.addEdge(
+          nodesArr[Integer.parseInt(eEdge.getAttribute("nodeID_1"))],
+          nodesArr[Integer.parseInt(eEdge.getAttribute("nodeID_2"))]
+      );
+    }
+    //endregion
+
+    //region Filtering LCC
+    ConnectivityInspector<ComputerNode, DefaultEdge> inspector = new ConnectivityInspector<>(test);
+    List<Set<ComputerNode>> connectedComponents = inspector.connectedSets();
+
+    Set<ComputerNode> largestComponent = connectedComponents.stream()
+        .max(Comparator.comparingInt(Set::size))
+        .orElseThrow(() -> new IllegalStateException("There should be at least one connected component"));
+
+    Graph<ComputerNode, DefaultEdge> LCC = new DefaultUndirectedGraph<>(DefaultEdge.class);
+
+    Graphs.addAllVertices(LCC, largestComponent);
+
+    for (ComputerNode vertex : largestComponent) {
+      for (DefaultEdge edge : test.edgesOf(vertex)) {
+        ComputerNode source = test.getEdgeSource(edge);
+        ComputerNode target = test.getEdgeTarget(edge);
+
+        if (largestComponent.contains(source) && largestComponent.contains(target)) {
+          LCC.addEdge(source, target);
+        }
+      }
+    }
+
+    //endregion
+
+    ArrayList<ComputerNode> coreTest = practicalCoreSelection(tau, nodesNum, LCC, coreSize);
+
+    System.out.print(largestComponent.size() + ",");
+
+    if(coreTest.size() == 0) {
+      return;
+    }
+
+    //region <Pre-Proccessing>
+    ManualGraphCore testWithCore = new ManualGraphCore(LCC, coreTest);
+    RoutingGraphBuilder testBuilder = new RoutingGraphBuilder(testWithCore);
+    testBuilder.process(printTbls);
+    //endregion
+
+    //region <Stretch-Calc>
+    ComputerNode[] s = new ComputerNode[sampleSize];
+    ComputerNode[] t = new ComputerNode[sampleSize];
+    int[] spLength = new int [sampleSize];
+
+    Random rand = new Random();
+    BFSShortestPath<ComputerNode, DefaultEdge> bfs = new BFSShortestPath<>(LCC);
+    List<ComputerNode> vertices = new ArrayList<>(LCC.vertexSet());
+    for (int i = 0; i < sampleSize; i++) {
+      int tempS = rand.nextInt(largestComponent.size());
+      int tempT = rand.nextInt(largestComponent.size());
+      while(tempT == tempS) {
+        tempT = rand.nextInt(largestComponent.size());
+      }
+      s[i] = vertices.get(tempS);
+      t[i] = vertices.get(tempT);
+
+      ShortestPathAlgorithm.SingleSourcePaths<ComputerNode, DefaultEdge> shortestPathsFromV =
+          bfs.getPaths(s[i]);
+      if (shortestPathsFromV.getPath(t[i]) == null) {
+        i--;
+      } else {
+        spLength[i] = shortestPathsFromV.getPath(t[i]).getLength();
+      }
+    }
+
+    rp.expVarNoHandshakes(s, t, spLength, printDists);
+    //endregion
+
+    if(printDegs) {
+      printAllVertexesDeg(testWithCore.getGraph());
+    }
+  }
+
+  public static void findBarrier(int nodesNum, double tau, String path) throws ParserConfigurationException, IOException, SAXException {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    RoutingProcedure rp = RoutingProcedure.getInstance();
+
+    File file = new File(path);
+    Document doc = builder.parse(file);
+
+    Element root = doc.getDocumentElement();
+
+    Graph<ComputerNode, DefaultEdge> test = new DefaultUndirectedGraph<>(DefaultEdge.class);
+
+    //region <Load Graph from File>
+    NodeList nodes = ((Element)root.getElementsByTagName("snapshot").item(0))
+        .getElementsByTagName("node");
+    ComputerNode[] nodesArr = new ComputerNode[nodes.getLength()];
+    for(int i = 0; i < nodes.getLength(); i++) {
+      Node nNode = nodes.item(i);
+      Element eNode = (Element)nNode;
+
+      ComputerNode a = new ComputerNode(Integer.parseInt(eNode.getAttribute("ID")));
+      test.addVertex(a);
+      nodesArr[Integer.parseInt(eNode.getAttribute("ID"))] = a;
+    }
+
+    NodeList edges = ((Element)root.getElementsByTagName("snapshot").item(0))
+        .getElementsByTagName("edge");
+    for(int i = 0; i < edges.getLength(); i++) {
+      Node nEdge = edges.item(i);
+      Element eEdge = (Element)nEdge;
+
+      test.addEdge(
+          nodesArr[Integer.parseInt(eEdge.getAttribute("nodeID_1"))],
+          nodesArr[Integer.parseInt(eEdge.getAttribute("nodeID_2"))]
+      );
+    }
+    //endregion
+
+    //region Filtering LCC
+    ConnectivityInspector<ComputerNode, DefaultEdge> inspector = new ConnectivityInspector<>(test);
+    List<Set<ComputerNode>> connectedComponents = inspector.connectedSets();
+
+    Set<ComputerNode> largestComponent = connectedComponents.stream()
+        .max(Comparator.comparingInt(Set::size))
+        .orElseThrow(() -> new IllegalStateException("There should be at least one connected component"));
+
+    Graph<ComputerNode, DefaultEdge> LCC = new DefaultUndirectedGraph<>(DefaultEdge.class);
+
+    Graphs.addAllVertices(LCC, largestComponent);
+
+    for (ComputerNode vertex : largestComponent) {
+      for (DefaultEdge edge : test.edgesOf(vertex)) {
+        ComputerNode source = test.getEdgeSource(edge);
+        ComputerNode target = test.getEdgeTarget(edge);
+
+        if (largestComponent.contains(source) && largestComponent.contains(target)) {
+          LCC.addEdge(source, target);
+        }
+      }
+    }
+
+    //endregion
+
+    ArrayList<ComputerNode> core = practicalCoreSelection(tau, nodesNum, LCC);
+    double barrier = LCC.degreeOf(core.stream().min(Comparator.comparingInt(LCC::degreeOf)).orElse(null));
+    System.out.println(nodesNum + "," + LCC.vertexSet().size() + "," + tau + "," + barrier);
   }
 }

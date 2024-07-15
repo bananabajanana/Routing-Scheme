@@ -141,7 +141,7 @@ public class RoutingProcedure {
 
     double[] output = { expectedVal(stretches), varianceVal(stretches) };
     if (csvPrint != Print.NONE) {
-      System.out.println("Stretch: " + output[0] + " ± " + output[1]);
+      System.out.println(output[0] + "," + output[1]);
     }
 
     return output;
