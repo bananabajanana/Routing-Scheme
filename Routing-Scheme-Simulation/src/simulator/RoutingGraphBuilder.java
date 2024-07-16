@@ -192,12 +192,18 @@ public class RoutingGraphBuilder {
     return (float)output;
   }
 
-  public void process(boolean csvPrint){
+  public enum Print {
+    NONE,
+    Answer,
+    Detailed
+  }
+
+  public void process(Print csvPrint){
     initiatePorts();
     this.core = this.graphWithCore.getCore();
     BFSShortestPath<ComputerNode, DefaultEdge> bfs = new BFSShortestPath<>(graphWithCore.getGraph());
 
-    if(csvPrint) {
+    if(csvPrint == Print.Detailed) {
       System.out.println("u,tblLines,amountFromCore,amountFromBall");
     }
     float tableSizes[] = new float[graphWithCore.getGraph().vertexSet().size()];
@@ -208,17 +214,15 @@ public class RoutingGraphBuilder {
       processCore(v, shortestPathsFromV);
       findAndProcessBallOfNode(v,shortestPathsFromV);
       initAddress(v);
-      if(csvPrint) {
+      tableSizes[i++] = v.getTbl().size();
+      if(csvPrint == Print.Detailed) {
         System.out.println(v.getNodeIndex() + "," + v.getTbl().size() + "," + (v.getTbl().size() - v.getBall().size()) + "," + v.getBall().size());
-        tableSizes[i++] = v.getTbl().size();
       }
     }
 
-    if(csvPrint) {
-      System.out.println("");
-      System.out.println("Amount of Table Lines per Node: " + expectedVal(tableSizes) + " ± " + varianceVal(tableSizes));
-      System.out.println("");
-      System.out.println("");
+
+    if(csvPrint != Print.NONE) {
+      System.out.print(expectedVal(tableSizes) + "," + varianceVal(tableSizes) + ",");
     }
   }
   //endregion
