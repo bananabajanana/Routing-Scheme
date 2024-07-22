@@ -44,14 +44,6 @@ import java.awt.Toolkit;
  */
 public class Main {
 
-  // utils
-  public static void printAllVertexesDeg(Graph<ComputerNode, DefaultEdge> graph){
-    System.out.println("index , degree");
-    for(ComputerNode node : graph.vertexSet()){
-      System.out.println( node.getNodeIndex() + "," + node.getDegree());
-    }
-  }
-
   /**
    * Demo of the tests and analysis.
 
@@ -65,6 +57,7 @@ public class Main {
     Toolkit.getDefaultToolkit().beep();
     try {
 //      fileTest();
+      Utils.rplgTest();
       PrintStream stdout = System.out;
       Date d1, d2 = new Date();
       int nodesNum = 100000;
